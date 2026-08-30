@@ -55,8 +55,12 @@ File mã nguồn chính: [`order-management.ts`](./order-management.ts)
   - `UpdateProductDTO = Partial<Omit<Product, 'id'>>` (Cho phép cập nhật từng trường lẻ của sản phẩm ngoại trừ `id`).
 - **`Pick`**:
   - `OrderSummary = Pick<Order, 'id' | 'code' | 'status' | 'paymentStatus' | 'totalAmount' | 'createdAt'>` (Rút gọn thuộc tính để hiển thị danh sách hoặc Dashboard tối ưu băng thông).
+- **`Extract`**:
+  - `TerminalOrderStatus = Extract<OrderStatus, OrderStatus.DELIVERED | OrderStatus.CANCELLED>` (Lọc ra tập hợp các trạng thái kết thúc của đơn hàng).
 - **`Readonly`**:
   - `ReadonlyOrder = Readonly<Order>` (Đảm bảo dữ liệu đơn hàng bất biến khi đã chốt xử lý).
+- **`Record`**:
+  - `ALLOWED_ORDER_STATUS_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]>` (State Machine map quy định luồng chuyển trạng thái hợp lệ).
 
 ---
 
@@ -64,5 +68,6 @@ File mã nguồn chính: [`order-management.ts`](./order-management.ts)
 
 - [x] Đầy đủ type cho 4 thực thể (`Order`, `OrderItem`, `Product`, `Customer`) đúng quan hệ dữ liệu.
 - [x] Sử dụng Generic hợp lý (`Order<TMetadata>`, `ApiResponse<T>`, `PaginatedResult<T>`).
-- [x] Áp dụng đúng các Utility Type (`Omit`, `Pick`, `Partial`, `Readonly`).
+- [x] Áp dụng đúng các Utility Type (`Omit`, `Pick`, `Partial`, `Extract`, `Readonly`, `Record`).
+- [x] Cấu trúc State Machine & Type Guard kiểm tra luồng chuyển trạng thái đơn hàng (`canTransitionOrderStatus`, `isOrderInTerminalState`).
 - [x] Comment giải thích rõ ràng chi tiết cho từng lựa chọn thiết kế.

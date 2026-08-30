@@ -185,7 +185,43 @@ export type OrderSummary = Pick<
 export type ReadonlyOrder = Readonly<Order>;
 
 // ============================================================================
-// 5. DEMO VÀ KIỂM TRA ĐỘ CHÍNH XÁC CỦA TYPE (EXAMPLE USAGE)
+// 5. ADVANCED TYPE GUARDS & STATE MACHINE (CHUYỂN ĐỔI TRẠNG THÁI NÂNG CAO)
+// ============================================================================
+
+/**
+ * Định nghĩa sơ đồ chuyển đổi trạng thái hợp lệ cho Đơn hàng (State Machine Map).
+ * Map mỗi trạng thái hiện tại với danh sách các trạng thái tiếp theo hợp lệ.
+ */
+export const ALLOWED_ORDER_STATUS_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
+  [OrderStatus.PENDING]: [OrderStatus.PROCESSING, OrderStatus.CANCELLED],
+  [OrderStatus.PROCESSING]: [OrderStatus.SHIPPED, OrderStatus.CANCELLED],
+  [OrderStatus.SHIPPED]: [OrderStatus.DELIVERED, OrderStatus.CANCELLED],
+  [OrderStatus.DELIVERED]: [],  // Trạng thái kết thúc, không thể chuyển tiếp
+  [OrderStatus.CANCELLED]: [],  // Trạng thái kết thúc, không thể chuyển tiếp
+};
+
+/**
+ * Utility Type: Lấy các trạng thái kết thúc (Terminal States) sử dụng `Extract`
+ */
+export type TerminalOrderStatus = Extract<OrderStatus, OrderStatus.DELIVERED | OrderStatus.CANCELLED>;
+
+/**
+ * Type Guard: Kiểm tra xem đơn hàng đã ở trạng thái kết thúc (DELIVERED hoặc CANCELLED) hay chưa.
+ */
+export function isOrderInTerminalState(order: Order): boolean {
+  return order.status === OrderStatus.DELIVERED || order.status === OrderStatus.CANCELLED;
+}
+
+/**
+ * Helper: Kiểm tra tính hợp lệ khi chuyển đổi từ currentStatus sang nextStatus.
+ */
+export function canTransitionOrderStatus(currentStatus: OrderStatus, nextStatus: OrderStatus): boolean {
+  const allowedNextStatuses = ALLOWED_ORDER_STATUS_TRANSITIONS[currentStatus];
+  return allowedNextStatuses.includes(nextStatus);
+}
+
+// ============================================================================
+// 6. DEMO VÀ KIỂM TRA ĐỘ CHÍNH XÁC CỦA TYPE (EXAMPLE USAGE)
 // ============================================================================
 
 // Ví dụ 1: Khởi tạo sản phẩm mẫu
@@ -251,3 +287,8 @@ const orderApiResponse: ApiResponse<Order<ShippingExpressMetadata>> = {
   data: sampleOrder,
   timestamp: new Date().toISOString(),
 };
+
+// Ví dụ 5: Kiểm tra tính hợp lệ chuyển đổi trạng thái đơn hàng (Polish Feature)
+const isValidTransition = canTransitionOrderStatus(sampleOrder.status, OrderStatus.SHIPPED); // true
+const isTerminal = isOrderInTerminalState(sampleOrder); // false
+
