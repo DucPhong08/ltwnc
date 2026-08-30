@@ -1,14 +1,10 @@
 /**
- * ============================================================================
  * BÀI TẬP VỀ NHÀ: THIẾT KẾ TYPE TYPESCRIPT CHO MODULE "QUẢN LÝ ĐƠN HÀNG"
  * Môn: Lập trình Web nâng cao | Buổi 1: TypeScript nâng cao cho ứng dụng lớn
  * Học viện Công nghệ Bưu chính Viễn thông (PTIT)
- * ============================================================================
  */
 
-// ============================================================================
 // 1. ENUMS - ĐỊNH DANH TRẠNG THÁI VÀ PHÂN LOẠI
-// ============================================================================
 
 /**
  * Enum quản lý trạng thái của đơn hàng trong quy trình xử lý.
@@ -41,9 +37,7 @@ export enum CustomerTier {
   PLATINUM = 'PLATINUM',
 }
 
-// ============================================================================
 // 2. CORE INTERFACES - 4 THỰC THỂ CHÍNH
-// ============================================================================
 
 /**
  * 1. Customer (Khách hàng)
@@ -98,7 +92,7 @@ export interface OrderItem {
  * - Áp dụng Generic `TMetadata` để cho phép mở rộng dữ liệu tùy biến (ví dụ: thông tin giao hàng đặc thù, mã giảm giá, tracking ID...) mà không làm thay đổi interface gốc.
  * - `customerSnapshot` sử dụng Utility Type `Pick` để lưu các thông tin liên lạc quan trọng tại thời điểm mua.
  */
-export interface Order<TMetadata = Record<string, unknown>> {
+export interface Order<TMetadata = any> {
   id: string;
   code: string;
   customerId: string;
@@ -113,9 +107,7 @@ export interface Order<TMetadata = Record<string, unknown>> {
   updatedAt: Date;
 }
 
-// ============================================================================
 // 3. GENERICS - TÁI SỬ DỤNG VÀ BAO BỌC DỮ LIỆU
-// ============================================================================
 
 /**
  * Generic Interface bao bọc phản hồi API (ApiResponse<T>)
@@ -140,9 +132,7 @@ export interface PaginatedResult<T> {
   totalPages: number;
 }
 
-// ============================================================================
 // 4. UTILITY TYPES - TÁI SỬ DỤNG VÀ ĐỊNH NGHĨA DTO (DATA TRANSFER OBJECTS)
-// ============================================================================
 
 /**
  * Utility Type 1: `Omit`
@@ -163,8 +153,8 @@ export type UpdateProductDTO = Partial<Omit<Product, 'id'>>;
  * Tạo DTO khi tạo đơn hàng mới từ Frontend.
  * Loại bỏ các trường hệ thống tính toán/sinh ra như `id`, `code`, `totalAmount`, `createdAt`, `updatedAt`, `customerSnapshot`.
  */
-export type CreateOrderDTO = Omit<
-  Order,
+export type CreateOrderDTO<TMetadata = any> = Omit<
+  Order<TMetadata>,
   'id' | 'code' | 'totalAmount' | 'createdAt' | 'updatedAt' | 'customerSnapshot'
 >;
 
@@ -174,7 +164,7 @@ export type CreateOrderDTO = Omit<
  * Chỉ chọn các thông tin cần thiết nhất để tối ưu dung lượng truyền tải.
  */
 export type OrderSummary = Pick<
-  Order,
+  Order<any>,
   'id' | 'code' | 'status' | 'paymentStatus' | 'totalAmount' | 'createdAt'
 >;
 
@@ -182,11 +172,9 @@ export type OrderSummary = Pick<
  * Utility Type 5: `Readonly`
  * Đảm bảo dữ liệu đơn hàng khi đã chốt/hoàn tất không thể bị thay đổi giá trị thuộc tính trực tiếp (Immutability).
  */
-export type ReadonlyOrder = Readonly<Order>;
+export type ReadonlyOrder<TMetadata = any> = Readonly<Order<TMetadata>>;
 
-// ============================================================================
 // 5. ADVANCED TYPE GUARDS & STATE MACHINE (CHUYỂN ĐỔI TRẠNG THÁI NÂNG CAO)
-// ============================================================================
 
 /**
  * Định nghĩa sơ đồ chuyển đổi trạng thái hợp lệ cho Đơn hàng (State Machine Map).
@@ -208,7 +196,7 @@ export type TerminalOrderStatus = Extract<OrderStatus, OrderStatus.DELIVERED | O
 /**
  * Type Guard: Kiểm tra xem đơn hàng đã ở trạng thái kết thúc (DELIVERED hoặc CANCELLED) hay chưa.
  */
-export function isOrderInTerminalState(order: Order): boolean {
+export function isOrderInTerminalState<T = any>(order: Order<T>): boolean {
   return order.status === OrderStatus.DELIVERED || order.status === OrderStatus.CANCELLED;
 }
 
@@ -220,9 +208,7 @@ export function canTransitionOrderStatus(currentStatus: OrderStatus, nextStatus:
   return allowedNextStatuses.includes(nextStatus);
 }
 
-// ============================================================================
 // 6. DEMO VÀ KIỂM TRA ĐỘ CHÍNH XÁC CỦA TYPE (EXAMPLE USAGE)
-// ============================================================================
 
 // Ví dụ 1: Khởi tạo sản phẩm mẫu
 const sampleProduct: Product = {
@@ -291,4 +277,3 @@ const orderApiResponse: ApiResponse<Order<ShippingExpressMetadata>> = {
 // Ví dụ 5: Kiểm tra tính hợp lệ chuyển đổi trạng thái đơn hàng (Polish Feature)
 const isValidTransition = canTransitionOrderStatus(sampleOrder.status, OrderStatus.SHIPPED); // true
 const isTerminal = isOrderInTerminalState(sampleOrder); // false
-
